@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15171a">
+<title>Deck Lab</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="static/img/icona.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Deck Lab">
+<link rel="preload" href="static/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="static/css/base.css?v=202611052018-b77b17ca">
+<link rel="stylesheet" href="static/css/hub.css?v=202611052018-b77b17ca">
+<link rel="stylesheet" href="static/css/table.css?v=202611052018-b77b17ca">
+<script src="config.js?v=202611052018-b77b17ca"></script>
+</head>
+<body>
+<div class="mat" id="mat">
+  <main id="app" aria-live="polite"></main>
+</div>
+<noscript>Deck Lab ha bisogno di JavaScript acceso nel browser.</noscript>
+<script type="module" src="static/js/main.js?v=202611052018-b77b17ca"></script>
+<script>
+if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,579 @@
+/* Il tavolo: il telefono e' il tappetino. Le tue terre stanno verso di te, le creature davanti,
+   come al tavolo vero; quelle dell'avversario sono specchiate in alto. */
+
+/* bustine: ogni giocatore sceglie il colore, come nella realta' */
+.sl-nero { --sleeve: #1c1d21; --sleeve-hi: #3a3c43; }
+.sl-rosso { --sleeve: #8e2a2b; --sleeve-hi: #b8494a; }
+.sl-blu { --sleeve: #1f4f8f; --sleeve-hi: #3d72b8; }
+.sl-bianco { --sleeve: #e8e4d8; --sleeve-hi: #ffffff; }
+.sl-verde { --sleeve: #2f6a3d; --sleeve-hi: #4d9160; }
+.sl-viola { --sleeve: #57397e; --sleeve-hi: #7a59a6; }
+.sl-giallo { --sleeve: #c99a26; --sleeve-hi: #e8bd4f; }
+
+html.in-table body { overflow: hidden; }
+body[data-view="table"] { padding: 0; }
+body[data-view="table"] .mat { border-radius: 0; min-height: 100dvh; max-width: none; margin: 0; }
+@media (min-width: 760px) {
+  body[data-view="table"] { padding: 18px; }
+  body[data-view="table"] .mat { border-radius: 18px; min-height: calc(100dvh - 36px); max-width: 560px; margin: 0 auto; }
+}
+
+.table-host { position: relative; }
+.table {
+  --cw: 62px;                         /* larghezza carta: le tue creature */
+  --cw-top: 50px;                     /* creature dell'avversario */
+  --lw: 46px;                         /* terre */
+  display: flex; flex-direction: column;
+  height: calc(100dvh - 2 * var(--binding));
+  margin: var(--binding);
+  padding: 6px 10px 0;
+  overflow: hidden;
+}
+@media (min-width: 760px) { .table { height: calc(100dvh - 36px - 2 * var(--binding)); } }
+@media (min-height: 760px) { .table { --cw: 70px; --cw-top: 56px; --lw: 50px; } }
+@media (min-height: 860px) { .table { --cw: 76px; --cw-top: 60px; --lw: 54px; } }
+
+/* ---- lati ------------------------------------------------------------------------------- */
+.side { display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.side::-webkit-scrollbar { display: none; }
+.side > * { flex-shrink: 0; }
+.side.top { flex: 0 0 auto; max-height: 38%; }
+.side.bottom { flex: 1 1 0; }
+.side.bottom::before { content: ""; flex: 1 1 auto; }   /* spinge il campo verso di te, senza farlo uscire dall'alto */
+.strip { flex: none; }
+
+.row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 6px;
+  padding: 4px 2px;
+  min-height: calc(var(--fit, var(--lw)) * 1.397 + 8px);
+}
+.side.bottom .row { align-content: flex-end; }
+.row::-webkit-scrollbar { display: none; }
+.side.bottom .row.field { min-height: calc(var(--fit, var(--cw)) * 1.397 + 10px); }
+.side.top .row.field { min-height: calc(var(--fit, var(--cw-top)) * 1.397 + 8px); }
+.row-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  height: calc(var(--lw) * 1.2); padding: 0 14px;
+  border: 1.5px dashed var(--ink-line); border-radius: 7px;
+  color: var(--ink-3); font-size: 12.5px;
+}
+.side.bottom .row.field .row-empty { height: calc(var(--cw) * 1.2); }
+
+/* ---- striscia: vite e zone -------------------------------------------------------------- */
+.strip { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; }
+.life {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  min-height: 46px; padding: 2px 8px 2px 2px; border: 0; background: transparent; color: var(--ink);
+  text-align: left; cursor: pointer; border-radius: 10px;
+}
+.life:hover { background: var(--ink-faint); }
+.life.static { cursor: default; }
+.life.static:hover { background: transparent; }
+.life-name { font-size: 15px; font-weight: 650; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+.life-n { font-size: 40px; line-height: 0.95; font-weight: 800; letter-spacing: -0.02em; }
+.life-turn { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.strip .life { flex-wrap: nowrap; }
+.zones { flex-wrap: nowrap; }
+@media (max-width: 400px) {
+  .lt-word { display: none; }
+  .zc { padding: 0 5px; gap: 3px; }
+  .life-name { font-size: 14px; }
+}
+.turn-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 2px rgba(0,0,0,0.25); }
+.zones { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; justify-content: flex-end; }
+.zc {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 7px;
+  border: 0; background: transparent; color: var(--ink-2); border-radius: 8px; font-size: 14px;
+}
+button.zc { cursor: pointer; }
+button.zc:hover { background: var(--ink-faint); color: var(--ink); }
+.zc .icon { width: 19px; height: 19px; }
+.zc b { font-weight: 700; color: var(--ink); }
+.small-btn { min-height: 40px; padding: 0 10px; font-size: 13.5px; border-radius: 9px; }
+.dummy .strip { flex-wrap: wrap; }
+.dummy-note { flex: 1 1 160px; text-align: right; }
+
+/* ---- linea di mezzo ------------------------------------------------------------------- */
+/* riga di stato: dice cosa succede e cosa tocca fare. Il segno a sinistra e' chiaro (color
+   carta) quando tocca a chi guarda questo telefono, spento quando si aspetta qualcun altro. */
+.midline { display: flex; align-items: center; gap: 8px; min-height: 46px; }
+.midline::before { content: ""; flex: 0 0 4px; align-self: stretch; margin: 9px 0; border-radius: 2px; background: var(--ink-line); }
+.mid-text {
+  flex: 1; min-width: 0; font-size: 14.5px; font-weight: 650; line-height: 1.2; color: var(--ink-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.midline.me::before { background: var(--object); }
+.midline.me .mid-text { color: var(--ink); }
+.mid-tools { display: flex; gap: 2px; }
+.mid-tools .btn { min-height: 44px; width: 44px; }
+
+/* ---- le carte in campo -------------------------------------------------------------- */
+.slot {
+  --w: var(--fit, var(--cw)); --h: calc(var(--w) * 1.397);
+  position: relative; flex: none; width: var(--w); height: var(--h);
+}
+.side.top .slot { --w: var(--fit, var(--cw-top)); }
+.slot.land { --w: var(--fit, var(--lw)); }
+.row.small .tc-name { font-size: 9px; -webkit-line-clamp: 3; }
+.row.small .tc-flags, .row.small .tc-cnt { display: none; }
+.row.small .tc-pt { font-size: 10.5px; }
+.slot.tapped { width: var(--h); }
+.slot.stacked { margin-right: 4px; }
+.tcard {
+  position: absolute; left: 50%; top: 50%; width: var(--w); height: var(--h);
+  margin: calc(var(--h) / -2) 0 0 calc(var(--w) / -2);
+  padding: 2.5px; border: 0; border-radius: 5px;
+  background: var(--sleeve, #1c1d21);
+  box-shadow: var(--shadow-contact), inset 0 0 0 1px var(--sleeve-hi, #333);
+  cursor: pointer; transition: transform 160ms ease;
+  touch-action: manipulation;
+}
+.slot.tapped .tcard { transform: rotate(90deg); }
+.tcard .face {
+  position: relative; display: flex; flex-direction: column; width: 100%; height: 100%;
+  padding: 6px 4px 3px; border-radius: 3px; overflow: hidden;
+  background: var(--card); color: var(--card-ink);
+  border-top: 6px solid var(--fc);
+  text-align: left;
+}
+.tcard .face.f-W { --fc: var(--c-W); } .tcard .face.f-U { --fc: var(--c-U); } .tcard .face.f-B { --fc: var(--c-B); }
+.tcard .face.f-R { --fc: var(--c-R); } .tcard .face.f-G { --fc: var(--c-G); } .tcard .face.f-M { --fc: var(--c-M); }
+.tcard .face.f-C { --fc: var(--c-C); } .tcard .face.f-L { --fc: var(--c-L); }
+.tcard .face[class*="f-"] { background: var(--card); }
+.tc-name {
+  font-size: 10.5px; line-height: 1.12; font-weight: 700; letter-spacing: -0.01em;
+  overflow-wrap: anywhere; hyphens: auto; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.side.top .tc-name { font-size: 9.5px; -webkit-line-clamp: 3; }
+.tc-flags { margin-top: 2px; font-size: 8.5px; line-height: 1.1; color: var(--card-ink-2); }
+.tc-pt {
+  position: absolute; right: 3px; bottom: 3px; padding: 1px 4px; border-radius: 4px;
+  background: #ece6d6; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+  font-size: 12px; font-weight: 800; line-height: 1.2;
+}
+.side.top .tc-pt { font-size: 11px; }
+.tc-pt.mod { background: #1b1d21; color: #fff; }
+.tc-loyal {
+  position: absolute; left: 3px; bottom: 3px; min-width: 20px; padding: 1px 4px; border-radius: 4px 4px 9px 9px;
+  background: #2b2d31; color: #fff; font-size: 12px; font-weight: 800; text-align: center;
+}
+.tc-plus {
+  position: absolute; left: 3px; bottom: 3px; min-width: 20px; height: 20px; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; background: #fff; color: #111; box-shadow: 0 0 0 1.5px #111;
+  font-size: 11px; font-weight: 800;
+}
+.tc-cnt { margin-top: auto; margin-bottom: 18px; font-size: 8.5px; line-height: 1.1; color: var(--card-ink-2); }
+.tc-solved { margin-top: auto; margin-bottom: 18px; font-size: 9px; font-weight: 800; color: #1d5a2a; }
+.tc-prod { margin-top: auto; display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
+.tc-prod .pip { width: 9px; height: 9px; }
+.tc-prod em { font-style: normal; font-size: 8.5px; font-weight: 700; color: var(--card-ink-2); }
+.tc-count {
+  position: absolute; right: -6px; top: -7px; z-index: 2; min-width: 24px; height: 22px; padding: 0 5px;
+  display: flex; align-items: center; justify-content: center; border-radius: 11px;
+  background: var(--object); color: var(--object-ink); font-size: 12px; font-weight: 800; box-shadow: var(--shadow-contact);
+}
+.slot.tapped .tc-count { transform: rotate(-90deg); }
+.row.lands.small .tc-name { font-size: 8.5px; }
+.tcard .under {
+  position: absolute; inset: 0; border-radius: 5px; background: var(--sleeve, #222);
+  box-shadow: var(--shadow-contact); z-index: -1;
+}
+.tcard .under.u2 { transform: translate(3px, 3px); }
+.tcard .under.u3 { transform: translate(6px, 6px); }
+.tcard.token .face { background: #ece8dc; border-top-style: dashed; }
+.tc-sick {
+  position: absolute; left: -2px; right: -2px; bottom: -9px; padding: 1px 2px; border-radius: 4px;
+  background: var(--warn); color: #2b1d00; font-size: 8.5px; font-weight: 800; text-align: center;
+}
+
+/* attacco: le creature scelte avanzano verso l'avversario */
+.side.bottom .tcard.selected, .side.bottom .tcard.attacking { transform: translateY(-9px); }
+.side.bottom .slot.tapped .tcard.attacking { transform: translateY(-9px) rotate(90deg); }
+.tcard.selected { box-shadow: 0 0 0 3px var(--warn), var(--shadow-lift); }
+.tcard.attacking { box-shadow: 0 0 0 2.5px var(--ink), var(--shadow-lift); }
+.tcard.blocked::after {
+  content: "bloccata"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-12deg);
+  padding: 2px 5px; border-radius: 4px; background: #111; color: #fff; font-size: 10px; font-weight: 800;
+}
+.slot.tapped .tcard.blocked::after { transform: translate(-50%, -50%) rotate(-90deg); }
+.mode-attack .side.bottom .tcard:not(.selected) { opacity: 0.92; }
+
+/* ---- pila delle abilita' da risolvere --------------------------------------------------- */
+.pile {
+  flex: 0 0 auto; max-height: 27%; overflow-y: auto; margin: 2px 0 4px;
+  padding: 8px; border-radius: 12px; background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 1.5px var(--ink-line);
+}
+.pile-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px 6px; font-size: 13.5px; font-weight: 650; color: var(--ink-2); }
+.pile ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.slip {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px;
+  padding: 7px 8px 7px 12px; border-radius: 8px;
+  background: var(--card); color: var(--card-ink);
+  box-shadow: var(--shadow-contact), inset 4px 0 0 var(--sleeve, #222);
+}
+.slip-body { display: flex; flex-direction: column; min-width: 0; }
+.slip-src { font-size: 12px; font-weight: 700; color: var(--card-ink-2); }
+.slip-text { font-size: 14px; line-height: 1.3; font-weight: 600;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.table.has-pile .side.top { max-height: 27%; }
+.slip { padding-top: 5px; padding-bottom: 5px; }
+.slip-acts { display: flex; gap: 4px; }
+.slip .btn-object { background: #1c1f23; color: #fff; box-shadow: none; }
+.slip .btn-quiet { color: var(--card-ink); }
+.slip .btn-quiet:hover { background: rgba(0,0,0,0.06); }
+
+/* ---- azioni -------------------------------------------------------------------------- */
+/* Barra delle azioni: a sinistra i tasti secondari (Altro sempre per primo), a destra il tasto
+   principale, sempre nello stesso posto e sotto il pollice. Quando non tocca a te, al suo posto
+   c'e' una scritta di attesa tratteggiata: nessun tasto finto da premere. */
+.actions { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px; padding: 6px 0 4px; align-items: stretch; }
+.actions.solo-main { grid-template-columns: minmax(0, 1fr); }
+.act-side { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(60px, 64px); gap: 6px; }
+.act2 { min-height: 54px; padding: 0 3px; flex-direction: column; gap: 2px; font-size: 12px; line-height: 1.1; letter-spacing: -0.005em; }
+.act2 .icon { width: 20px; height: 20px; }
+.act2 span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act1 { min-height: 54px; padding: 4px 10px; font-size: 15.5px; line-height: 1.15; text-align: center; }
+.act1 .icon { width: 20px; height: 20px; }
+.act-wait {
+  display: flex; align-items: center; justify-content: center; margin: 0; padding: 4px 10px;
+  border: 1.5px dashed var(--ink-line); border-radius: var(--r-object);
+  color: var(--ink-2); font-size: 14px; font-weight: 650; line-height: 1.2; text-align: center;
+}
+
+/* ---- la mano: carte che spuntano dal bordo -------------------------------------------- */
+.hand-rail {
+  position: relative; flex: none; height: 64px; margin: 0 -10px; padding: 0;
+  border: 0; background: transparent; cursor: pointer; overflow: hidden;
+}
+.rail-fan { position: absolute; left: 50%; bottom: -46px; width: 0; height: 0; }
+.rail-card {
+  position: absolute; left: -32px; bottom: 0; width: 64px; height: 90px; padding: 2.5px; border-radius: 6px;
+  background: var(--sleeve); box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--sleeve-hi);
+  transform-origin: 50% 160%;
+  transform: translateX(calc(var(--k) * 30px)) rotate(calc(var(--k) * 4deg));
+}
+.rail-card .face {
+  display: block; width: 100%; height: 100%; padding: 6px 4px; border-radius: 3.5px;
+  background: var(--card); color: var(--card-ink); font-size: 9.5px; font-weight: 700; line-height: 1.1;
+  border-top: 5px solid var(--fc, var(--c-C)); overflow: hidden;
+}
+.rail-card .face.f-W { --fc: var(--c-W); } .rail-card .face.f-U { --fc: var(--c-U); } .rail-card .face.f-B { --fc: var(--c-B); }
+.rail-card .face.f-R { --fc: var(--c-R); } .rail-card .face.f-G { --fc: var(--c-G); } .rail-card .face.f-M { --fc: var(--c-M); }
+.rail-card .face.f-C { --fc: var(--c-C); } .rail-card .face.f-L { --fc: var(--c-L); }
+.rail-label {
+  position: absolute; left: 14px; bottom: 10px; padding: 3px 9px; border-radius: 10px;
+  background: var(--object); color: var(--object-ink); font-size: 13px; font-weight: 750; box-shadow: var(--shadow-contact);
+}
+
+/* carte grandi (mano, cimitero, scelte) */
+.hand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; margin-top: 12px; }
+.hcard {
+  display: block; width: 100%; aspect-ratio: 63 / 88; padding: 3px; border: 0; border-radius: 7px;
+  background: #1c1d21; box-shadow: var(--shadow-contact); cursor: pointer; text-align: left;
+}
+.hcard .face {
+  display: flex; flex-direction: column; gap: 4px; width: 100%; height: 100%; padding: 7px 6px 6px; border-radius: 4.5px;
+  background: var(--card); color: var(--card-ink); border-top: 8px solid var(--fc, var(--c-C));
+  position: relative; overflow: hidden;
+}
+.hcard .face.f-W { --fc: var(--c-W); } .hcard .face.f-U { --fc: var(--c-U); } .hcard .face.f-B { --fc: var(--c-B); }
+.hcard .face.f-R { --fc: var(--c-R); } .hcard .face.f-G { --fc: var(--c-G); } .hcard .face.f-M { --fc: var(--c-M); }
+.hcard .face.f-C { --fc: var(--c-C); } .hcard .face.f-L { --fc: var(--c-L); }
+.hc-name { font-size: 13px; line-height: 1.15; font-weight: 750; overflow-wrap: break-word; hyphens: auto; }
+.hc-cost .cost { flex-wrap: wrap; }
+.hc-foot { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 4px; }
+.hc-type { font-size: 10.5px; line-height: 1.2; color: var(--card-ink-2); hyphens: auto; overflow-wrap: break-word; }
+.hc-pt { flex: none; padding: 1px 5px; border-radius: 4px; background: #ece6d6; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); font-size: 12px; font-weight: 800; }
+.hcard.selected { box-shadow: 0 0 0 3px var(--warn), var(--shadow-lift); transform: translateY(-4px); }
+
+/* ---- schermate di passaggio e mulligan ------------------------------------------------ */
+.handoff, .mull {
+  min-height: calc(100dvh - 2 * var(--binding));
+  margin: var(--binding);
+  padding: 30px 22px 28px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;
+}
+.handoff h1 { font-size: 34px; }
+.handoff p { max-width: 34ch; }
+.handoff .btn-object { width: min(100%, 360px); margin-top: 10px; }
+.handoff-card {
+  width: 104px; height: 145px; padding: 5px; border-radius: 9px; margin-bottom: 8px;
+  background: var(--sleeve); box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--sleeve-hi);
+  transform: rotate(-4deg);
+}
+.handoff-card span {
+  display: block; width: 100%; height: 100%; border-radius: 5px;
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 6px, transparent 6px 12px),
+    var(--sleeve);
+  box-shadow: inset 0 0 0 2px var(--sleeve-hi);
+}
+.handoff-lives { display: flex; gap: 22px; color: var(--ink-2); }
+.handoff-lives strong { color: var(--ink); font-size: 22px; margin-left: 4px; }
+.handoff.end h1 { font-size: 38px; }
+.handoff .pick-list { width: min(100%, 360px); }
+
+.mull { justify-content: flex-start; padding-top: 22px; }
+.mull h1 { font-size: 26px; }
+.mull-hand { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 560px; margin-top: 6px; }
+@media (min-width: 520px) { .mull-hand { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.mull-actions { display: grid; gap: 8px; width: min(100%, 420px); margin-top: auto; padding-top: 14px; }
+
+/* ---- fogli del tavolo -------------------------------------------------------------- */
+.sheet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 12px; }
+.sheet-h { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
+.pick-list { display: grid; gap: 8px; margin-top: 14px; }
+.stepper { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px; }
+.stepper .btn { min-width: 52px; }
+.stepper span, .stepper b { font-weight: 700; }
+.abil-list { display: grid; gap: 8px; margin-top: 8px; }
+.btn.abil { justify-content: flex-start; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; text-align: left; height: auto; }
+.abil-cost { font-weight: 800; }
+.abil-text { font-weight: 500; font-size: 14px; color: var(--ink-2); }
+.life-big { font-size: 72px; font-weight: 800; line-height: 1; text-align: center; margin: 10px 0; }
+.life-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.dmg-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.dmg-row b { font-size: 26px; min-width: 40px; text-align: center; }
+.diary { margin-top: 10px; display: grid; gap: 14px; }
+.diary h3 { font-size: 14px; color: var(--ink-2); }
+.diary ol { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 3px; }
+.diary li { font-size: 14.5px; line-height: 1.4; }
+.diary li.k-turn { font-weight: 700; }
+.diary li.k-alert { color: var(--warn); }
+label.check { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+label.check input { width: 20px; height: 20px; }
+
+/* ---- preparazione ------------------------------------------------------------------ */
+.mode-pick { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+.mode { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1.5px solid var(--ink-line); border-radius: var(--r-zone); cursor: pointer; }
+.mode:has(input:checked) { border-color: var(--ink); background: var(--ink-faint); }
+.mode input { width: 20px; height: 20px; margin-top: 2px; accent-color: #f1f4f6; }
+.mode-body { display: flex; flex-direction: column; gap: 2px; }
+.player-box { display: grid; gap: 12px; }
+.player-box h2 { font-size: 18px; }
+.sleeve-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.sw { position: relative; cursor: pointer; }
+.sw input { position: absolute; opacity: 0; inset: 0; }
+.sw-card {
+  display: block; width: 34px; height: 47px; border-radius: 5px; background: var(--sleeve);
+  box-shadow: var(--shadow-contact), inset 0 0 0 1px var(--sleeve-hi);
+}
+.sw input:checked + .sw-card { box-shadow: 0 0 0 3px var(--ink), var(--shadow-lift); transform: translateY(-3px); }
+.sw input:focus-visible + .sw-card { outline: 3px solid var(--warn); outline-offset: 3px; }
+.first-pick { border: 0; padding: 0; margin: 0; }
+.first-pick legend { font-size: 14px; color: var(--ink-2); margin-bottom: 6px; }
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; }
+.seg span {
+  display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 0 8px;
+  border: 1.5px solid var(--ink-line); border-radius: 10px; font-weight: 650; cursor: pointer; text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.seg span .icon { width: 18px; height: 18px; }
+.seg input:checked + span { border-color: var(--ink); background: var(--ink); color: var(--mat-deep); }
+.seg input:focus-visible + span { outline: 3px solid var(--warn); outline-offset: 2px; }
+@media (max-height: 760px) {
+  .pile { max-height: 24%; }
+  .slip { padding: 5px 6px 5px 10px; }
+  .slip-text { font-size: 13px; }
+  .hand-rail { height: 54px; }
+  .life-n { font-size: 34px; }
+}
+
+/* ---- sideboard tra le partite ------------------------------------------------------------ */
+html.in-table .sb-page { height: calc(100dvh - 2 * var(--binding)); overflow-y: auto; }
+.sb-h { margin-top: 18px; font-size: 17px; }
+.sb-list { list-style: none; margin: 6px 0 0; padding: 0; }
+.sb-row { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; min-height: 46px; border-top: 1.5px solid var(--ink-faint); }
+.sb-row .qty { font-weight: 800; text-align: right; }
+.sb-name { font-weight: 600; }
+
+/* ---- stanza a due telefoni ------------------------------------------------------------------ */
+.room-code { font-size: 40px; font-weight: 800; letter-spacing: 0.18em; }
+.seats { list-style: none; margin: 8px 0 0; padding: 0; }
+.seat { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 12px; min-height: 58px; border-top: 1.5px solid var(--ink-faint); }
+.seat-card {
+  display: block; width: 30px; height: 42px; border-radius: 5px; background: var(--sleeve);
+  box-shadow: var(--shadow-contact), inset 0 0 0 1px var(--sleeve-hi);
+}
+.seat.empty .seat-card, .seat.empty .sw-card { opacity: 0.35; }
+.seat.empty strong { color: var(--ink-2); }
+.lobby-wait { margin-top: 18px; font-weight: 650; }
+.lobby .row-actions { margin-top: 4px; }
+
+/* attesa durante la partita a due telefoni */
+.wait-note { display: flex; align-items: center; min-height: 46px; padding: 0 6px; color: var(--ink-2); font-weight: 600; }
+
+.foe-off { margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--warn); letter-spacing: 0.02em; }
+.net-status {
+  position: fixed; left: 50%; top: calc(var(--binding, 8px) + 6px); transform: translateX(-50%); z-index: 60;
+  padding: 6px 14px; border-radius: 999px; background: var(--mat-deep); color: var(--ink);
+  box-shadow: var(--shadow-lift); font-size: 13px; font-weight: 650;
+}
+.net-status[hidden] { display: none; }
+.join-code { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.join-code input { text-transform: uppercase; letter-spacing: 0.2em; font-weight: 750; }
+
+/* ---- pausa dell'host ----------------------------------------------------------------------
+   In pausa la linea di mezzo diventa un nastro giallo, come quando al tavolo si chiama un giudice.
+   Sul telefono dell'host le carte hanno un filo giallo: si possono toccare tutte per cambiarle. */
+.midline.paused { margin: 2px 0; padding: 0 4px 0 12px; border-radius: 10px; background: var(--warn); color: #2b1d00; }
+.midline.paused::before { display: none; }
+.midline.paused .mid-text { color: #2b1d00; }
+.midline.paused .btn-quiet { color: #2b1d00; }
+.midline.paused .btn-quiet:hover { background: rgba(0, 0, 0, 0.08); }
+.table.paused:not(.host-on) .side, .table.paused:not(.host-on) .hand-rail, .table.paused:not(.host-on) .pile { opacity: 0.78; }
+.table.host-on .side .tcard { box-shadow: 0 0 0 1.5px var(--warn), var(--shadow-contact); }
+.paused-note { justify-content: center; text-align: center; line-height: 1.3; }
+.host-bar .end { font-size: 14.5px; }
+.host-badge {
+  display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 6px; vertical-align: 1px;
+  background: var(--warn); color: #2b1d00; font-size: 11.5px; font-weight: 800;
+}
+
+/* ---- segni in piu' sulle carte e sui giocatori --------------------------------------------- */
+.tc-tags { margin-top: 2px; font-size: 8px; line-height: 1.1; font-weight: 750; color: #6b3d00; }
+.row.small .tc-tags, .side.top .tc-tags { font-size: 7.5px; }
+.tcard.facedown .face {
+  background: repeating-linear-gradient(135deg, #d9d4c6 0 4px, #cfc9b9 4px 8px);
+  border-top-color: var(--c-C);
+}
+.pchip {
+  align-self: center; padding: 1px 5px; border-radius: 6px;
+  background: var(--object); color: var(--object-ink); font-size: 11px; font-weight: 800; white-space: nowrap;
+}
+.strip .life { min-width: 0; }
+.zc.has-playable { position: relative; }
+.zc.has-playable::after {
+  content: ""; position: absolute; top: 6px; right: 4px; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--warn); box-shadow: 0 0 0 1.5px var(--mat);
+}
+.diary li.k-host { color: var(--warn); }
+.diary li.k-host::marker { content: "✎ "; }
+
+/* ---- fogli degli strumenti ----------------------------------------------------------------- */
+.host-sheet .cs-type b { font-weight: 800; }
+/* le schede di una carta: tutte visibili, in una griglia 3x2 */
+.htabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 14px; }
+.htab {
+  min-height: 42px; padding: 0 6px; border: 1.5px solid var(--ink-line); border-radius: 10px;
+  background: transparent; color: var(--ink-2); font: inherit; font-size: 14.5px; font-weight: 650; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.htab[aria-selected="true"] { border-color: var(--ink); background: var(--ink); color: var(--mat-deep); }
+.htab-body { margin-top: 12px; min-height: 160px; }
+.htab-body > .seg { margin-bottom: 4px; }
+.seg.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.seg.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.segb {
+  min-height: 44px; padding: 0 8px; border: 1.5px solid var(--ink-line); border-radius: 10px;
+  background: transparent; color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 650; cursor: pointer;
+}
+.segb[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--mat-deep); }
+/* una scelta spenta e' un posto vuoto sul tappetino (tratteggio); accesa e' un gettone appoggiato */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip {
+  min-height: 40px; padding: 0 12px; border: 1.5px dashed var(--ink-line); border-radius: 8px;
+  background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 650; cursor: pointer;
+}
+.chip.on { border: 1.5px solid var(--object); background: var(--object); color: var(--object-ink); box-shadow: var(--shadow-contact); }
+.htab:focus-visible, .chip:focus-visible, .segb:focus-visible { outline: 3px solid var(--warn); outline-offset: 2px; }
+.btn.on { border-color: var(--warn); color: var(--warn); }
+.hrows { display: grid; gap: 8px; }
+.hstep { min-height: 46px; padding-left: 4px; border-bottom: 1.5px solid var(--ink-faint); }
+.hstep span { flex: 1; text-align: center; }
+.pt-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.pt-grid .btn { padding: 0; font-variant-numeric: tabular-nums; }
+.inline-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; margin: 14px 0 10px; }
+.host-sheet > .btn, .htab-body > .btn { margin-top: 8px; width: 100%; }
+.emblems { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.emblems li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 9px; background: rgba(0, 0, 0, 0.18); }
+.emblems li.muted { background: none; padding-left: 0; }
+.zone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; }
+.zone-col { display: grid; gap: 6px; }
+.zone-col .btn { justify-content: space-between; }
+.tok-opts { display: grid; gap: 10px; margin-top: 12px; padding: 10px; border-radius: 12px; background: rgba(0, 0, 0, 0.18); }
+.tok-opts .chips { margin-top: 0; }
+.tok-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
+.tok-btn { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; height: auto; min-height: 52px; padding: 8px 12px; text-align: left; }
+.tok-btn small { font-size: 12px; font-weight: 500; color: var(--ink-2); line-height: 1.25; }
+.pstats { display: grid; gap: 8px; margin-top: 14px; padding-top: 10px; border-top: 1.5px solid var(--ink-faint); }
+.hz-wrap { position: relative; }
+.hz-tag {
+  position: absolute; left: 6px; bottom: -6px; padding: 1px 6px; border-radius: 6px;
+  background: var(--warn); color: #2b1d00; font-size: 11px; font-weight: 800;
+}
+.hz-wrap .hz-tag + .hz-tag { left: auto; right: 6px; }
+
+/* ---- la pila: magie e abilita' in attesa di risolversi -------------------------------------
+   Come al tavolo: le carte lanciate si impilano al centro. In alto la cima, intera; sotto le
+   altre, solo il nome. Chi si sta risolvendo ha il bordo giallo. */
+.stack-zone {
+  flex: 0 0 auto; max-height: 34%; overflow-y: auto; margin: 2px 0 4px; padding: 8px;
+  border-radius: 12px; background: rgba(0, 0, 0, 0.28); box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.stack-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px 6px; font-size: 13.5px; font-weight: 750; }
+.stack-prio { padding: 1px 8px; border-radius: 6px; background: var(--object); color: var(--object-ink); font-size: 12.5px; font-weight: 800; }
+.stack-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.sitem-body {
+  display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 8px; width: 100%;
+  padding: 6px 10px 6px 14px; border: 0; border-radius: 8px; background: var(--card); color: var(--card-ink);
+  font: inherit; text-align: left; cursor: pointer;
+  box-shadow: var(--shadow-contact), inset 5px 0 0 var(--sleeve, #222);
+}
+.si-name { font-size: 14.5px; font-weight: 800; line-height: 1.2; }
+.si-who { font-size: 12px; font-weight: 700; color: var(--card-ink-2); white-space: nowrap; }
+.si-text { grid-column: 1 / -1; margin-top: 2px; font-size: 13px; line-height: 1.3; color: var(--card-ink-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sitem:not(.top) .sitem-body { padding-top: 4px; padding-bottom: 4px; background: #e9e4d6; }
+.sitem:not(.top) .si-text { display: none; }
+.sitem.resolving .sitem-body { box-shadow: 0 0 0 3px var(--warn), inset 5px 0 0 var(--sleeve, #222); }
+.table:has(.stack-zone) .side.top { max-height: 27%; }
+
+
+/* ---- righe vuote del campo: basse, cosi' resta spazio per la pila e i promemoria ---------- */
+.row:has(> .row-empty:only-child) { min-height: 0; }
+.row .row-empty, .side.bottom .row.field .row-empty { height: 38px; }
+
+/* ---- Altro, guida, interruttori ------------------------------------------------------------ */
+.quick-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.quick-grid .act2 { font-size: 13.5px; }
+.switch-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 14px;
+  border: 1.5px solid var(--ink-2); border-radius: var(--r-object); background: transparent; color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer; touch-action: manipulation;
+}
+.switch-row:hover { background: var(--ink-faint); }
+.switch-row:focus-visible { outline: 3px solid var(--warn); outline-offset: 2px; }
+.sw-text { flex: 1; display: grid; gap: 2px; }
+.sw-text b { font-size: 15.5px; }
+.sw-text span { font-size: 13px; line-height: 1.3; color: var(--ink-2); }
+.sw-pill { flex: none; position: relative; width: 48px; height: 28px; border-radius: 14px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1.5px var(--ink-line); }
+.sw-pill span { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--ink-2); transition: transform 160ms ease; }
+.switch-row[aria-checked="true"] .sw-pill { background: var(--object); box-shadow: none; }
+.switch-row[aria-checked="true"] .sw-pill span { transform: translateX(20px); background: var(--object-ink); }
+.exit-zone { display: grid; gap: 2px; margin-top: 18px; padding-top: 10px; border-top: 1.5px solid var(--ink-faint); }
+.exit-zone .btn { justify-content: flex-start; color: var(--ink-2); font-weight: 600; }
+.guide { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 9px; font-size: 15px; line-height: 1.4; }
+.guide b { font-weight: 750; }
+
+/* ---- foglio della carta ---------------------------------------------------------------------- */
+.cs-type b { font-weight: 800; color: var(--ink); }
+.cs-main { margin-top: 12px; }
+.cs-counters { display: grid; gap: 4px; margin-top: 10px; }
+.move-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.move-grid .btn { min-height: 44px; padding: 0 6px; font-size: 14px; }
+.tools-link { width: 100%; margin-top: 14px; justify-content: flex-start; color: var(--ink-2); font-weight: 600; }
+.respond-btn { gap: 4px; }
+.respond-btn .icon { width: 17px; height: 17px; }
+
+/* telefoni stretti: il tasto principale senza icona, cosi' la scritta sta su una riga */
+@media (max-width: 380px) { .act1 .icon { display: none; } .act1 { font-size: 15px; } }
+@media (hover: none) {
+  .life:hover, button.zc:hover, .switch-row:hover { background: transparent; }
+  button.zc:hover { color: var(--ink-2); }
+  .slip .btn-quiet:hover, .midline.paused .btn-quiet:hover { background: transparent; }
+}
