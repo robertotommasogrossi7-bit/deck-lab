@@ -8,6 +8,7 @@ import {
 import * as E from "./engine.js";
 import { applySimple, condition, describe, effectKind, startChain } from "./effects.js";
 import * as H from "./host.js";
+import { mulliganAdvice } from "./advice.js";
 
 export const VIEW = "table";
 
@@ -366,6 +367,15 @@ function drawHandoff(kind) {
 }
 
 // ---- mulligan --------------------------------------------------------------------------------
+// per il consiglio del mulligan: Apparire e Imminente fanno costare meno la carta
+function adviceCard(id) {
+  const i = E.info(S, id) || {};
+  const alt = ((E.script(S, id) || {}).other_keywords || []).find((k) => /^(Evoke|Impending):/.test(k));
+  if (!alt) return i;
+  const mana = alt.split(":").slice(-1)[0].trim().split(/\s+/).reduce((t, x) => t + (/^\d+$/.test(x) ? Number(x) : 1), 0);
+  return { ...i, mv: Math.min(i.mv ?? 99, mana) };
+}
+
 function drawMulligan() {
   const p = mulSeat();
   const pl = P(p);
@@ -375,7 +385,7 @@ function drawMulligan() {
   host.innerHTML = `<div class="mull">
     <p class="micro">Mano iniziale di ${esc(pl.name)}${pl.mulligans ? `, dopo ${pl.mulligans} mulligan` : ""}</p>
     <h1>${choosing ? `Scegli ${plural(toBottom, "carta", "carte")} da mettere in fondo` : `${plural(lands, "terra", "terre")} su 7`}</h1>
-    <p class="muted small">${choosing ? `Ne hai scelte ${ui.mulSel.length}.` : mulAdvice(lands, pl.mulligans)}</p>
+    <p class="muted small">${choosing ? `Ne hai scelte ${ui.mulSel.length}.` : mulliganAdvice(pl.hand.map(adviceCard), pl.mulligans, S.first === p)}</p>
     <div class="mull-hand">${pl.hand.map((id) => handCard(id, { selectable: choosing, selected: ui.mulSel.includes(id), act: choosing ? "mulpick" : "peek" })).join("")}</div>
     <div class="mull-actions">
       ${choosing
@@ -385,14 +395,6 @@ function drawMulligan() {
            <button class="btn btn-big" data-act="mull" ${pl.mulligans >= 6 ? "disabled" : ""}>Mulligan</button>`}
     </div>
   </div>`;
-}
-
-function mulAdvice(lands, m) {
-  const size = 7 - m;
-  const bad = size === 7 ? [0, 1, 6, 7] : size === 6 ? [0, 1, 5, 6] : size === 5 ? [0, 1, 5] : [];
-  const kept = size === 7 ? lands : lands;
-  if (bad.includes(kept)) return `La regola di Karsten dice mulligan con ${kept} terre${size < 7 ? ` quando tieni ${size} carte` : ""}. Decidi tu.`;
-  return "La regola di Karsten (solo sulle terre) dice di tenerla.";
 }
 
 // ---- il tappetino --------------------------------------------------------------------------
